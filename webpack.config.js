@@ -1,38 +1,55 @@
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const CleanWebpackPlugin = require('clean-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
 module.exports = {
-    entry: './src/index.js',
+    entry: {
+        main: ['./src/index.js']
+    },
     devtool: 'inline-source-map',
     devServer: {
-        contentBase: './dist'
+        contentBase: './dist',
+        overlay: true
     },
     plugins: [
         new CleanWebpackPlugin(['dist']),
-        new MiniCssExtractPlugin({
-            filename: "[name].css",
-            chunkFilename: "[id].css"
+        new HtmlWebpackPlugin({
+            filename: 'index.html',
+            template: 'src/index.html'
         }),
         new HtmlWebpackPlugin({
-            title: 'My App',
-            template: 'index.html'
-        }),
-        new HtmlWebpackPlugin({
-            title: 'uHost',
             filename: 'packages/index.html',
             template: 'src/packages/index.html'
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'customers/index.html',
+            template: 'src/customers/index.html'
+        }),
+        new MiniCssExtractPlugin({
+            filename: 'css/[name].css',
+            chunkFilename: 'css/[id].css'
         })
     ],
     output: {
-        filename: 'main.js',
+        filename: '[name]-bundle.js',
         path: path.resolve(__dirname, 'dist')
     },
     module: {
         rules: [
             {
-                test: /\.css$/,
+                test: /\.(png|svg|jpg|gif)$/,
+                use: [
+                    {
+                        loader: 'file-loader',
+                        options: {
+                            name: '[name].[ext]'
+                        }
+                    }
+                ]
+            },
+            {
+                test: /\.scss$/,
                 use: [
                     {
                         loader: MiniCssExtractPlugin.loader,
@@ -40,15 +57,20 @@ module.exports = {
                             publicPath: '../'
                         }
                     },
-                    "css-loader"
+                    'css-loader', // translates CSS into CommonJS
+                    'sass-loader' // compiles Sass to CSS, using Node Sass by default
                 ]
             },
             {
-                test: /\.(png|svg|jpg|gif)$/,
-                use: [
-                    'file-loader'
-                ]
+                test: /\.(html)$/,
+                use: {
+                    loader: 'html-loader',
+                    options: {
+                        minimize: false,
+                        attrs: [':data-src']
+                    }
+                }
             }
         ]
     }
-};
+}
